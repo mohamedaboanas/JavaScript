@@ -56,13 +56,11 @@ var budgetController = (function(){
             // ID last ID + 1
             
             // Create new ID
-            if(data.allItems[type].length > 0 ){
-                 ID = data.allItem[type][data.allItems[type].length - 1].id + 1;
-            }else{
+            if (data.allItems[type].length > 0) {
+                ID = data.allItems[type][data.allItems[type].length - 1].id + 1;
+            } else {
                 ID = 0;
-            }
-            
-            
+            }            
                       
             // Create new item basesd on  'inc' or 'exp' type
             if(type === 'exp'){
@@ -78,6 +76,22 @@ var budgetController = (function(){
             return newItem;
             
         },
+        
+         deleteItem: function(type, id) {
+            
+            var ids, index;
+            
+            ids = data.allItems[type].map(function(current) {               
+                return current.id;
+            });
+            
+            index = ids.indexOf(id);   
+             
+            if(index !== -1){
+                data.allItems[type].splice(index, 1);
+            }
+        },
+        
         
         calculateBudget: function(){
             
@@ -106,7 +120,7 @@ var budgetController = (function(){
                 percentage: data.percentage
             };
         },
-        
+                
         testing: function (){
             console.log(data);
         }
@@ -129,7 +143,9 @@ var UIController = (function(){
         incomeLabel: '.budget__income--value',
         expensesLabel: '.budget__expenses--value',
         percentageLabel: '.budget__expenses--percentage',
-        container: 'container'
+        container: '.container',
+        expensesPercLabel: '.item__percentage',
+        dateLabel: '.budget__title--month'
     };
     
     return{
@@ -162,6 +178,12 @@ var UIController = (function(){
             // Insert the HTML into the DOM
             document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
             
+        },
+        
+        deleteItem: function(selectorID){
+          
+            var el = document.getElementById(selectorID);
+            el.parentNode.removeChild(el);
         },
         
         clearFields: function(){
@@ -212,11 +234,9 @@ var controller = (function(budgetCtrl, UIContrl){
         document.querySelector(DOM.inputBtn).addEventListener('click', ctrlAddItem);
         
         document.addEventListener('keypress', function(event){
-        if(event === 13 || event.which === 13){
-            ctrlAddItem();
-            
-            document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem);
-        }});
+        if(event === 13 || event.which === 13){ ctrlAddItem();}});
+        
+        document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem);
     };
     
     var updateBudget = function(){
@@ -256,25 +276,29 @@ var controller = (function(budgetCtrl, UIContrl){
     
     var ctrlDeleteItem  = function(event){
       
-        var itemID, splitID, type, ID;
         
-        itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
+        var itemID, splitID, type, ID;        
+         itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
         
-        if(itemID){
+        if(itemID) {
+            
             splitID = itemID.split('-');
             type = splitID[0];
-            ID = splitID[1];
+            ID = parseInt(splitID[1]);
             
-            // 1. Delete the Item from the data structure
-            
+            // 1. Delete the Item from the data structure            
+            budgetCtrl.deleteItem(type, ID);
             
             // 2. Delete the item from the UI
-            
+            UIContrl.deleteItem(itemID);
             
             // 3. Update and show the budget
+             updateBudget();
         }
-    };
-    
+       
+    };  
+              
+          
     return{
       init:  function(){
           console.log('Application started!');
